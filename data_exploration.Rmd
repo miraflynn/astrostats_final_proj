@@ -1,0 +1,80 @@
+---
+title: "Data Exploration"
+author: "Mira Flynn"
+date: "4/6/2022"
+output: github_document
+  toc: TRUE
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+df_craters <- read.csv("data/AstroStats_Robbins_Moon.csv")
+df_craters %>% head()
+```
+```{r}
+df_craters %>% summary()
+```
+
+```{r}
+df_craters %>%
+  ggplot(aes(x = LAT_ELLI_IMG, y = DIAM_ELLI_ANGLE_IMG)) +
+  geom_point(alpha = 0.1) +
+  geom_smooth()
+```
+
+```{r}
+df_craters %>%
+  ggplot(aes(x = LAT_ELLI_IMG, y = DIAM_ELLI_ECCEN_IMG)) +
+  geom_point(alpha = 0.1) +
+  geom_smooth()
+```
+
+```{r}
+df_craters %>%
+  ggplot(aes(x = LAT_ELLI_IMG, y = DIAM_ELLI_MAJOR_IMG)) +
+  geom_point(alpha = 0.1) +
+  geom_smooth() +
+  scale_y_log10()
+```
+
+
+```{r}
+df_craters %>%
+  ggplot(aes(x = LAT_ELLI_IMG, y = DIAM_ELLI_MINOR_IMG)) +
+  geom_point(alpha = 0.1) +
+  geom_smooth() +
+  scale_y_log10()
+```
+
+
+```{r}
+df_craters %>%
+  mutate(
+    LON_ELLI_IMG = ifelse(LON_ELLI_IMG > 180, LON_ELLI_IMG-360, LON_ELLI_IMG)
+  ) %>%
+  ggplot(aes(y = LAT_ELLI_IMG, x = LON_ELLI_IMG)) +
+  geom_point(alpha = 0.1)
+  # geom_smooth()
+
+
+# WOAH THIS IS SO COOL LOOK AT THIS
+# https://www.physics.unlv.edu/~jeffery/astro/moon/map/moon_map_mercator.jpg
+```
+
+
+
+
+```{r}
+df_craters %>%
+  ggplot(aes(LAT_ELLI_IMG)) +
+  geom_histogram(bins = 36) +
+  scale_x_continuous(breaks = c(-90,-60,-30,0,30,60,90))
+
+# NOTE: This isn't accounting for diameter changes over latitudes
+```
+
+

@@ -234,4 +234,11 @@ map %>%
 
 
 
+oh no there were so many links I used
+https://wms.lroc.asu.edu/lroc/view_rdr/SHAPEFILE_LROC_GLOBAL_MARE
+https://gis.stackexchange.com/questions/133625/checking-if-points-fall-within-polygon-shapefile
+https://r-spatial.org/r/2017/03/19/invalid.html
+https://gis.stackexchange.com/questions/413584/fix-features-with-invalid-spherical-geometry-polygon-shape-file-for-s2-geometr
+https://stackoverflow.com/questions/54734771/sf-write-lat-long-from-geometry-into-separate-column-and-keep-id-column
+https://stackoverflow.com/questions/54734771/sf-write-lat-long-from-geometry-into-separate-column-and-keep-id-column
 

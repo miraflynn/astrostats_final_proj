@@ -60,7 +60,6 @@ df_craters %>%
   geom_point(alpha = 0.1)
   # geom_smooth()
 
-
 # WOAH THIS IS SO COOL LOOK AT THIS
 # https://www.physics.unlv.edu/~jeffery/astro/moon/map/moon_map_mercator.jpg
 ```
@@ -76,5 +75,47 @@ df_craters %>%
 
 # NOTE: This isn't accounting for diameter changes over latitudes
 ```
+
+
+```{r}
+rad2deg <- function(rad) {(rad * 180) / (pi)}
+deg2rad <- function(deg) {(deg * pi) / (180)}
+# https://stackoverflow.com/questions/32370485/convert-radians-to-degree-degree-to-radians
+
+# r = Radius of Moon
+r <- 1737.4*1000
+round_digits = 5
+
+df_craters_hist <- df_craters %>%
+  mutate(
+    LAT_ROUND = floor(LAT_ELLI_IMG/round_digits)*round_digits
+  ) %>%
+  group_by(LAT_ROUND) %>%
+  summarize(
+    COUNT_LAT_ROUND = n()
+  ) %>%
+  mutate(
+    NORM_LAT_ROUND = 2*pi*r*cos(deg2rad(LAT_ROUND)*COUNT_LAT_ROUND)
+  )
+df_craters_hist %>% head()
+```
+
+
+
+```{r}
+df_craters_hist %>%
+  ggplot(aes(x = LAT_ROUND, y = COUNT_LAT_ROUND)) +
+  geom_col(width = round_digits, color = "black")
+  
+```
+
+```{r}
+df_craters_hist %>%
+  ggplot(aes(x = LAT_ROUND, y = NORM_LAT_ROUND)) +
+  geom_col(width = round_digits, color = "black")
+```
+
+
+
 
 

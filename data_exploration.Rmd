@@ -9,6 +9,30 @@ output: github_document
 ```{r setup}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(sf)
+
+theme_common <- function() {
+  theme_minimal() %+replace%
+  theme(
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    axis.title.x = element_text(margin = margin(4, 4, 4, 4), size = 16),
+    axis.title.y = element_text(margin = margin(4, 4, 4, 4), size = 16, angle = 90),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 12),
+    strip.text.x = element_text(size = 12),
+    strip.text.y = element_text(size = 12),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_line(color = "grey90"),
+    aspect.ratio = 10/16,
+    plot.margin = unit(c(t = +0.5, b = +0, r = +0, l = +0), "cm"),
+    plot.title = element_text(size = 18),
+    # plot.title.position = "plot",
+    plot.subtitle = element_text(size = 16),
+    plot.caption = element_text(size = 12)
+  )
+}
+
 ```
 
 ```{r}
@@ -57,7 +81,8 @@ df_craters %>%
     LON_ELLI_IMG = ifelse(LON_ELLI_IMG > 180, LON_ELLI_IMG-360, LON_ELLI_IMG)
   ) %>%
   ggplot(aes(y = LAT_ELLI_IMG, x = LON_ELLI_IMG)) +
-  geom_point(alpha = 0.1)
+  geom_point(alpha = 0.1) +
+  coord_fixed()
   # geom_smooth()
 
 # WOAH THIS IS SO COOL LOOK AT THIS
@@ -82,20 +107,23 @@ rad2deg <- function(rad) {(rad * 180) / (pi)}
 deg2rad <- function(deg) {(deg * pi) / (180)}
 # https://stackoverflow.com/questions/32370485/convert-radians-to-degree-degree-to-radians
 
-# r = Radius of Moon
-r <- 1737.4*1000
+# r = Radius of Moon in KM
+r <- 1737.4
 round_digits = 5
 
 df_craters_hist <- df_craters %>%
   mutate(
-    LAT_ROUND = floor(LAT_ELLI_IMG/round_digits)*round_digits
+    LAT_ROUND = round(LAT_ELLI_IMG/round_digits)*round_digits
+  ) %>%
+  filter(
+    abs(LAT_ROUND) < 90
   ) %>%
   group_by(LAT_ROUND) %>%
   summarize(
     COUNT_LAT_ROUND = n()
   ) %>%
   mutate(
-    NORM_LAT_ROUND = 2*pi*r*cos(deg2rad(LAT_ROUND)*COUNT_LAT_ROUND)
+    NORM_LAT_ROUND = COUNT_LAT_ROUND/(2*pi*r*cos(deg2rad(LAT_ROUND)))
   )
 df_craters_hist %>% head()
 ```
@@ -105,16 +133,104 @@ df_craters_hist %>% head()
 ```{r}
 df_craters_hist %>%
   ggplot(aes(x = LAT_ROUND, y = COUNT_LAT_ROUND)) +
-  geom_col(width = round_digits, color = "black")
+  geom_col(
+    aes(
+      # fill = LAT_ROUND %>% as.character() %>% reorder(LAT_ROUND)
+    ), 
+    width = round_digits, 
+    color = "black", 
+    size = 1,
+    show.legend = FALSE
+  ) +
+  scale_x_continuous(
+    breaks = seq(-90,90,15),
+    minor_breaks = seq(-90,90,5)
+  ) +
+  # scale_y_log10() +
+  theme_common() +
+  theme(
+    panel.grid.major = element_line(color = "darkgrey"),
+    panel.grid.minor = element_line(color = "grey90"),
+  ) +
+  labs(
+    x = "Latitude (degrees)",
+    y = "Craters"
+  )
   
 ```
 
 ```{r}
 df_craters_hist %>%
   ggplot(aes(x = LAT_ROUND, y = NORM_LAT_ROUND)) +
-  geom_col(width = round_digits, color = "black")
+  geom_col(
+    aes(
+      # fill = LAT_ROUND %>% as.character() %>% reorder(LAT_ROUND)
+    ), 
+    width = round_digits, 
+    color = "black", 
+    size = 1,
+    show.legend = FALSE
+  ) +
+  scale_x_continuous(
+    breaks = seq(-90,90,15),
+    minor_breaks = seq(-90,90,5)
+  ) +
+  # scale_y_log10() +
+  theme_common() +
+  theme(
+    panel.grid.major = element_line(color = "darkgrey"),
+    panel.grid.minor = element_line(color = "grey90"),
+  ) +
+  labs(
+    x = "Latitude (degrees)",
+    y = "Craters per Latitude Circumference \n (Craters/KM)"
+  )
 ```
 
+
+
+```{r}
+# sf::sf_use_s2(FALSE)
+
+map = read_sf("data/LROC_GLOBAL_MARE_180.SHP") %>%
+  st_make_valid()
+
+lats = c()
+lons = c()
+for (lat in seq(-90,90,1)){
+  for (lon in seq(-180,180,1)){
+    lats = c(lats, lat)
+    lons = c(lons, lon)
+  }
+}
+pnts <- data.frame(lat = lats, lon = lons)
+
+pnts_sf <- st_as_sf(pnts, coords = c("lon", "lat"), crs = st_crs(map))
+
+pnts <- pnts_sf %>% 
+  mutate(
+    intersection = as.integer(st_intersects(geometry, map)), area = is.na(intersection), #if_else(is.na(intersection), '', map$SUA_NAME16[intersection])
+  ) %>%
+  mutate(
+    lat = unlist(map(geometry,2)),
+    lon = unlist(map(geometry,1))
+  )
+
+pnts %>% summary()
+pnts %>%
+  ggplot() +
+  geom_point(aes(x = lon, y = lat, color = area), size = 1) +
+  coord_fixed()
+```
+
+
+```{r}
+st_crs(map$geometry) <- 4326
+
+map %>%
+  ggplot() +
+  geom_sf()
+```
 
 
 

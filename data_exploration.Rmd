@@ -39,9 +39,38 @@ theme_common <- function() {
 ```
 
 ```{r}
-df_craters <- read.csv("data/AstroStats_Robbins_Moon.csv")
+df_craters <- read.csv("data/AstroStats_Robbins_Moon.csv") # Load the dataset
+
+# Changes longitude from 0 to 360 -> -180 to 180
+df_craters <- df_craters %>% mutate(
+      LON_ELLI_IMG = ifelse(LON_ELLI_IMG > 180, LON_ELLI_IMG-360, LON_ELLI_IMG)
+    ) %>%
+    filter(!is.na(LAT_ELLI_IMG))
+
+map = read_sf("data/LROC_GLOBAL_MARE_180.SHP") %>%
+  st_make_valid()
+st_crs(map$geometry) <- 4326
+
+craters_sf <- st_as_sf(
+  df_craters, 
+  coords = c("LON_ELLI_IMG", "LAT_ELLI_IMG"), 
+  crs = st_crs(map),
+  remove = FALSE
+)
+
+df_craters <- craters_sf %>% 
+  mutate(
+    intersection = geometry %>% st_intersects(map, sparse = TRUE),
+    MARIA = (intersection %>% as.character()) != "integer(0)"
+  ) %>%
+  select(
+    -c(intersection, geometry)
+  )
+
 df_craters %>% head()
 ```
+
+
 ```{r}
 df_craters %>% summary()
 ```
@@ -80,13 +109,9 @@ df_craters %>%
 
 ```{r}
 df_craters %>%
-  mutate(
-    LON_ELLI_IMG = ifelse(LON_ELLI_IMG > 180, LON_ELLI_IMG-360, LON_ELLI_IMG)
-  ) %>%
   ggplot(aes(x = LON_ELLI_IMG, y = LAT_ELLI_IMG)) +
   geom_point(alpha = 0.1) +
   coord_fixed()
-  # geom_smooth()
 
 # WOAH THIS IS SO COOL LOOK AT THIS
 # https://www.physics.unlv.edu/~jeffery/astro/moon/map/moon_map_mercator.jpg
@@ -190,62 +215,14 @@ df_craters_hist %>%
   )
 ```
 
-```{r}
-# map = read_sf("data/LROC_GLOBAL_MARE_180.SHP") %>%
-#   st_make_valid()
-
-# pnts_sf <- st_as_sf(
-#   df_craters %>%
-#     mutate(
-#       LON_ELLI_IMG = ifelse(LON_ELLI_IMG > 180, LON_ELLI_IMG-360, LON_ELLI_IMG)
-#     ) %>%
-#     filter(!is.na(LAT_ELLI_IMG)), 
-#     coords = c("LAT_ELLI_IMG", "LON_ELLI_IMG"), 
-#     crs = st_crs(map),
-#     remove = FALSE
-#   )
-# 
-# pnts <- pnts_sf %>% 
-#   mutate(
-#     intersection = geometry %>% st_intersects(map) %>% as.integer(),
-#     maria = !is.na(intersection)
-#   )
-# 
-# pnts %>% summary()
-```
 
 
 ```{r}
-map = read_sf("data/LROC_GLOBAL_MARE_180.SHP") %>%
-  st_make_valid()
-st_crs(map$geometry) <- 4326
-
-pnts_sf <- st_as_sf(
-  df_craters %>%
-    mutate(
-      LON_ELLI_IMG = ifelse(LON_ELLI_IMG > 180, LON_ELLI_IMG-360, LON_ELLI_IMG)
-    ) %>%
-    filter(!is.na(LAT_ELLI_IMG)), 
-    coords = c("LON_ELLI_IMG", "LAT_ELLI_IMG"), 
-    crs = st_crs(map),
-    remove = FALSE
-  )
-
-pnts <- pnts_sf %>% 
-  mutate(
-    intersection = geometry %>% st_intersects(map, sparse = TRUE),
-    maria = (intersection %>% as.character()) != "integer(0)"
-  )
-
-# pnts %>% summary()
-```
-
-```{r}
-pnts %>%
+df_craters %>%
   ggplot() +
   geom_point(
-    aes(x = LON_ELLI_IMG, y = LAT_ELLI_IMG, color = maria), 
-    size = 1, 
+    aes(x = LON_ELLI_IMG, y = LAT_ELLI_IMG, color = MARIA), 
+    size = 1,
     alpha = 0.2) +
   coord_fixed()
 
@@ -282,7 +259,7 @@ pnts_sf <- st_as_sf(
 pnts <- pnts_sf %>% 
   mutate(
     intersection = geometry %>% st_intersects(map) %>% as.integer(),
-    maria = !is.na(intersection) #if_else(is.na(intersection), '', map$SUA_NAME16[intersection])
+    maria = !is.na(intersection)
   )
 
 pnts %>% summary()
@@ -299,11 +276,8 @@ st_crs(map$geometry) <- 4326
 map %>%
   ggplot() +
   geom_sf(
-    aes(
-      # fill = ID %>% as.character() %>% reorder(ID),
-      # color = ID %>% as.character() %>% reorder(ID)
-      fill = "maria"
-      )
+    fill = "black",
+    color = "black"
     )
 ```
 

@@ -9,7 +9,10 @@ output: github_document
 ```{r setup}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(magrittr)
 library(sf)
+
+sf::sf_use_s2(FALSE) # this fixes the geometry of the shapefile for some reason
 
 theme_common <- function() {
   theme_minimal() %+replace%
@@ -80,7 +83,7 @@ df_craters %>%
   mutate(
     LON_ELLI_IMG = ifelse(LON_ELLI_IMG > 180, LON_ELLI_IMG-360, LON_ELLI_IMG)
   ) %>%
-  ggplot(aes(y = LAT_ELLI_IMG, x = LON_ELLI_IMG)) +
+  ggplot(aes(x = LON_ELLI_IMG, y = LAT_ELLI_IMG)) +
   geom_point(alpha = 0.1) +
   coord_fixed()
   # geom_smooth()
@@ -187,39 +190,105 @@ df_craters_hist %>%
   )
 ```
 
+```{r}
+# map = read_sf("data/LROC_GLOBAL_MARE_180.SHP") %>%
+#   st_make_valid()
+
+# pnts_sf <- st_as_sf(
+#   df_craters %>%
+#     mutate(
+#       LON_ELLI_IMG = ifelse(LON_ELLI_IMG > 180, LON_ELLI_IMG-360, LON_ELLI_IMG)
+#     ) %>%
+#     filter(!is.na(LAT_ELLI_IMG)), 
+#     coords = c("LAT_ELLI_IMG", "LON_ELLI_IMG"), 
+#     crs = st_crs(map),
+#     remove = FALSE
+#   )
+# 
+# pnts <- pnts_sf %>% 
+#   mutate(
+#     intersection = geometry %>% st_intersects(map) %>% as.integer(),
+#     maria = !is.na(intersection)
+#   )
+# 
+# pnts %>% summary()
+```
 
 
 ```{r}
-# sf::sf_use_s2(FALSE)
+map = read_sf("data/LROC_GLOBAL_MARE_180.SHP") %>%
+  st_make_valid()
+st_crs(map$geometry) <- 4326
+
+pnts_sf <- st_as_sf(
+  df_craters %>%
+    mutate(
+      LON_ELLI_IMG = ifelse(LON_ELLI_IMG > 180, LON_ELLI_IMG-360, LON_ELLI_IMG)
+    ) %>%
+    filter(!is.na(LAT_ELLI_IMG)), 
+    coords = c("LON_ELLI_IMG", "LAT_ELLI_IMG"), 
+    crs = st_crs(map),
+    remove = FALSE
+  )
+
+pnts <- pnts_sf %>% 
+  mutate(
+    intersection = geometry %>% st_intersects(map, sparse = TRUE),
+    maria = (intersection %>% as.character()) != "integer(0)"
+  )
+
+# pnts %>% summary()
+```
+
+```{r}
+pnts %>%
+  ggplot() +
+  geom_point(
+    aes(x = LON_ELLI_IMG, y = LAT_ELLI_IMG, color = maria), 
+    size = 1, 
+    alpha = 0.2) +
+  coord_fixed()
+
+
+```
+
+
+
+```{r}
 
 map = read_sf("data/LROC_GLOBAL_MARE_180.SHP") %>%
   st_make_valid()
 
+st_crs(map$geometry) <- 4326
+
+
 lats = c()
 lons = c()
-for (lat in seq(-90,90,1)){
-  for (lon in seq(-180,180,1)){
+for (lat in seq(-90,90,2)){
+  for (lon in seq(-180,180,2)){
     lats = c(lats, lat)
     lons = c(lons, lon)
   }
 }
 pnts <- data.frame(lat = lats, lon = lons)
 
-pnts_sf <- st_as_sf(pnts, coords = c("lon", "lat"), crs = st_crs(map))
+pnts_sf <- st_as_sf(
+    pnts, 
+    coords = c("lon", "lat"), 
+    crs = st_crs(map),
+    remove = FALSE
+  )
 
 pnts <- pnts_sf %>% 
   mutate(
-    intersection = as.integer(st_intersects(geometry, map)), area = is.na(intersection), #if_else(is.na(intersection), '', map$SUA_NAME16[intersection])
-  ) %>%
-  mutate(
-    lat = unlist(map(geometry,2)),
-    lon = unlist(map(geometry,1))
+    intersection = geometry %>% st_intersects(map) %>% as.integer(),
+    maria = !is.na(intersection) #if_else(is.na(intersection), '', map$SUA_NAME16[intersection])
   )
 
 pnts %>% summary()
 pnts %>%
   ggplot() +
-  geom_point(aes(x = lon, y = lat, color = area), size = 1) +
+  geom_point(aes(x = lon, y = lat, color = maria), size = 1) +
   coord_fixed()
 ```
 
@@ -229,7 +298,13 @@ st_crs(map$geometry) <- 4326
 
 map %>%
   ggplot() +
-  geom_sf()
+  geom_sf(
+    aes(
+      # fill = ID %>% as.character() %>% reorder(ID),
+      # color = ID %>% as.character() %>% reorder(ID)
+      fill = "maria"
+      )
+    )
 ```
 
 

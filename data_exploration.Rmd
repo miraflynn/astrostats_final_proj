@@ -7,13 +7,18 @@ output: github_document
 ---
 
 ```{r setup}
-knitr::opts_chunk$set(echo = TRUE)
+# Dependencies
 library(tidyverse)
 library(magrittr)
 library(sf)
 
+# Create the final PDF with code snippets shown
+knitr::opts_chunk$set(echo = TRUE)
+
 sf::sf_use_s2(FALSE) # this fixes the geometry of the shapefile for some reason
 
+
+# This is a premade graph theme I originally got from ZDR and modified for myself
 theme_common <- function() {
   theme_minimal() %+replace%
   theme(
@@ -38,34 +43,38 @@ theme_common <- function() {
 
 ```
 
-```{r}
-df_craters <- read.csv("data/AstroStats_Robbins_Moon.csv") # Load the dataset
+```{r data-cleaning}
+map = read_sf("data/LROC_GLOBAL_MARE_180.SHP") %>% # Load the maria shapefile
+  st_make_valid() # I don't know what this does exactly but it fixes the shapefile
+st_crs(map$geometry) <- 4326 # Again, I don't understand
 
-# Changes longitude from 0 to 360 -> -180 to 180
-df_craters <- df_craters %>% mutate(
+df_craters <- read.csv("data/AstroStats_Robbins_Moon.csv") %>% # Load the dataset
+  mutate( # Change longitude from 0 to 360  -> -180 to 180
       LON_ELLI_IMG = ifelse(LON_ELLI_IMG > 180, LON_ELLI_IMG-360, LON_ELLI_IMG)
-    ) %>%
-    filter(!is.na(LAT_ELLI_IMG))
-
-map = read_sf("data/LROC_GLOBAL_MARE_180.SHP") %>%
-  st_make_valid()
-st_crs(map$geometry) <- 4326
-
-craters_sf <- st_as_sf(
-  df_craters, 
-  coords = c("LON_ELLI_IMG", "LAT_ELLI_IMG"), 
-  crs = st_crs(map),
-  remove = FALSE
-)
-
-df_craters <- craters_sf %>% 
+  ) %>%
+  filter(!is.na(LAT_ELLI_IMG)) %>% # Get rid of the 8 craters with NA ellipses
+  st_as_sf( # Convert the craters dataset to a shapefile object
+    coords = c("LON_ELLI_IMG", "LAT_ELLI_IMG"), 
+    crs = st_crs(map),
+    remove = FALSE
+  ) %>% 
   mutate(
     intersection = geometry %>% st_intersects(map, sparse = TRUE),
+    # Interesection column is where each point intersects the map, if any
     MARIA = (intersection %>% as.character()) != "integer(0)"
+    # This is a bit chaotic. The intersection column is a funky object type, so
+    # to compare it, I cast it to a character type. If the intersection is 0,
+    # then the point is not in one of the maria regions. 
   ) %>%
-  select(
+  as.data.frame() %>% # Need to cast back to dataframe to get rid of geometry
+  select( # Get rid of the intersection and geometry columns for clarity.
     -c(intersection, geometry)
   )
+
+df_craters %>% write.csv(
+    "data/AstroStats_Robbins_Moon_Maria.csv", 
+    row.names = FALSE
+  ) # Write modified data to CSV
 
 df_craters %>% head()
 ```
@@ -232,33 +241,30 @@ df_craters %>%
 
 
 ```{r}
-
-map = read_sf("data/LROC_GLOBAL_MARE_180.SHP") %>%
-  st_make_valid()
-
-st_crs(map$geometry) <- 4326
-
-
+# Create empty lists of lats and lons
 lats = c()
 lons = c()
+
+# Add every combo of lats and lons, spaced at 2 degrees, to the list
 for (lat in seq(-90,90,2)){
   for (lon in seq(-180,180,2)){
     lats = c(lats, lat)
     lons = c(lons, lon)
   }
 }
-pnts <- data.frame(lat = lats, lon = lons)
 
-pnts_sf <- st_as_sf(
-    pnts, 
+
+pnts <- data.frame(lat = lats, lon = lons) %>% # Make a dataframe of the evenly
+  # spaced points
+  st_as_sf( # Then do the same things as we did with the craters dataset.
     coords = c("lon", "lat"), 
     crs = st_crs(map),
     remove = FALSE
-  )
-
-pnts <- pnts_sf %>% 
+  ) %>% 
   mutate(
     intersection = geometry %>% st_intersects(map) %>% as.integer(),
+    # For some reason, this dataframe works a bit differently. I don't
+    # understand why, and I'm not gonna spend a bunch of time figuring out why
     maria = !is.na(intersection)
   )
 
@@ -271,13 +277,12 @@ pnts %>%
 
 
 ```{r}
-st_crs(map$geometry) <- 4326
-
+# Showing the original shapefile
 map %>%
   ggplot() +
   geom_sf(
-    fill = "black",
-    color = "black"
+    fill = "blue",
+    color = "blue"
     )
 ```
 

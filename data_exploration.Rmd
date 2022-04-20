@@ -2,9 +2,12 @@
 title: "Data Exploration"
 author: "Mira Flynn"
 date: "4/6/2022"
-output: github_document
-  toc: TRUE
+output: 
+  github_document:
+    toc: TRUE
 ---
+
+Note: I haven't done cleanup and explanation of the markdown file. Sorry! This will be nicer in the future.
 
 ```{r setup}
 # Dependencies
@@ -40,6 +43,16 @@ theme_common <- function() {
     plot.caption = element_text(size = 12)
   )
 }
+
+rad2deg <- function(rad) {(rad * 180) / (pi)}
+deg2rad <- function(deg) {(deg * pi) / (180)}
+# https://stackoverflow.com/questions/32370485/convert-radians-to-degree-degree-to-radians
+
+# r = Radius of Moon in KM
+r <- 1737.4
+
+# How much to round the latitudes. Round to spacing of 5
+round_digits = 5
 
 ```
 
@@ -83,9 +96,22 @@ df_craters %>% head()
 ```{r}
 df_craters %>% summary()
 ```
+```{r}
+df_craters %>%
+  ggplot(aes(x = LAT_ELLI_IMG, y = DIAM_ELLI_ANGLE_IMG)) +
+  geom_point(alpha = 0.1) +
+  geom_smooth()
+```
+
 
 ```{r}
 df_craters %>%
+  mutate(
+    LAT_ELLI_IMG = abs(LAT_ELLI_IMG),
+    DIAM_ELLI_ANGLE_IMG = DIAM_ELLI_ANGLE_IMG %% 180
+  ) %>%
+  filter(DIAM_ELLI_ECCEN_IMG > 0.8) %>%
+  filter(LAT_ELLI_IMG < 60) %>%
   ggplot(aes(x = LAT_ELLI_IMG, y = DIAM_ELLI_ANGLE_IMG)) +
   geom_point(alpha = 0.1) +
   geom_smooth()
@@ -138,32 +164,86 @@ df_craters %>%
 # NOTE: This isn't accounting for diameter changes over latitudes
 ```
 
+```{r}
+# Create empty lists of lats and lons
+lats = c()
+lons = c()
+
+# Add every combo of lats and lons, spaced at 2 degrees, to the list
+for (lat in seq(-90,90,1)){
+  for (lon in seq(-180,180,1)){
+    lats = c(lats, lat)
+    lons = c(lons, lon)
+  }
+}
+
+
+pnts <- data.frame(lat = lats, lon = lons) %>% # Make a dataframe of the evenly
+  # spaced points
+  st_as_sf( # Then do the same things as we did with the craters dataset.
+    coords = c("lon", "lat"), 
+    crs = st_crs(map),
+    remove = FALSE
+  ) %>% 
+  mutate(
+    intersection = geometry %>% st_intersects(map) %>% as.integer(),
+    # For some reason, this dataframe works a bit differently. I don't
+    # understand why, and I'm not gonna spend a bunch of time figuring out why
+    maria = !is.na(intersection)
+  )
+
+pnts %>% summary()
+pnts %>%
+  ggplot() +
+  geom_point(aes(x = lon, y = lat, color = maria), size = 0.2) +
+  coord_fixed()
+```
 
 ```{r}
-rad2deg <- function(rad) {(rad * 180) / (pi)}
-deg2rad <- function(deg) {(deg * pi) / (180)}
-# https://stackoverflow.com/questions/32370485/convert-radians-to-degree-degree-to-radians
-
-# r = Radius of Moon in KM
-r <- 1737.4
-round_digits = 5
-
-df_craters_hist <- df_craters %>%
+maria_portions <- pnts %>%
   mutate(
-    LAT_ROUND = round(LAT_ELLI_IMG/round_digits)*round_digits
+    LAT_ROUND = round(lat/round_digits)*round_digits
   ) %>%
   filter(
     abs(LAT_ROUND) < 90
   ) %>%
   group_by(LAT_ROUND) %>%
   summarize(
+    PORTION_MARIA = mean(maria)
+  ) %>%
+  as.data.frame() %>%
+  select(c(-geometry))
+maria_portions %>% head()
+```
+
+
+```{r}
+df_craters_hist <- df_craters %>%
+  mutate(
+    LAT_ROUND = round(LAT_ELLI_IMG/round_digits)*round_digits
+  ) %>%
+  filter(
+    abs(LAT_ROUND) < 90 # Get rid of 90s because they round to 0 area
+  ) %>%
+  group_by(LAT_ROUND, MARIA) %>%
+  summarize(
     COUNT_LAT_ROUND = n()
   ) %>%
   mutate(
-    NORM_LAT_ROUND = COUNT_LAT_ROUND/(2*pi*r*cos(deg2rad(LAT_ROUND)))
+    CIRCUMFERENCE_LAT = 2*pi*r*cos(deg2rad(LAT_ROUND)),
+    NORM_LAT_ROUND = COUNT_LAT_ROUND/CIRCUMFERENCE_LAT
+  ) %>%
+  left_join(maria_portions, by = "LAT_ROUND") %>%
+  mutate(
+    CIRCUMFERENCE_BIOME = ifelse(
+      MARIA, 
+      CIRCUMFERENCE_LAT * PORTION_MARIA, 
+      CIRCUMFERENCE_LAT * (1-PORTION_MARIA)),
+    BIOME = ifelse(MARIA, "MARIA", "HIGHLANDS")
   )
 df_craters_hist %>% head()
 ```
+
 
 
 
@@ -198,7 +278,101 @@ df_craters_hist %>%
 
 ```{r}
 df_craters_hist %>%
+  group_by(LAT_ROUND) %>%
+  summarize(
+    NORM_LAT_ROUND = sum(COUNT_LAT_ROUND)/mean(CIRCUMFERENCE_LAT)
+  ) %>%
   ggplot(aes(x = LAT_ROUND, y = NORM_LAT_ROUND)) +
+  geom_col(
+    aes(
+      # fill = LAT_ROUND %>% as.character() %>% reorder(LAT_ROUND)
+    ), 
+    width = round_digits, 
+    color = "black", 
+    size = 1,
+    show.legend = FALSE
+  ) +
+  scale_x_continuous(
+    breaks = seq(-90,90,15),
+    minor_breaks = seq(-90,90,15)
+  ) +
+  # scale_y_log10() +
+  theme_common() +
+  theme(
+    panel.grid.major = element_line(color = "grey90"),
+    # panel.grid.minor = element_line(color = "grey90"),
+  ) +
+  labs(
+    x = "Latitude (degrees)",
+    y = "Crater Density \n (craters/km)",
+    caption = "\n Lunar crater density distribution at different latitudes \n"
+  )
+```
+
+
+```{r}
+
+df_craters_hist %>%
+  mutate(
+    NORM_LAT_ROUND_BIOME = COUNT_LAT_ROUND/CIRCUMFERENCE_BIOME
+  ) %>%
+  
+  ggplot(aes(x = LAT_ROUND, y = NORM_LAT_ROUND_BIOME)) +
+  geom_col(
+    aes(
+      # fill = LAT_ROUND %>% as.character() %>% reorder(LAT_ROUND)
+    ), 
+    width = round_digits, 
+    color = "black", 
+    size = 1,
+    show.legend = FALSE
+  ) +
+  facet_wrap(vars(BIOME)) +
+  scale_x_continuous(
+    breaks = seq(-90,90,15),
+    minor_breaks = seq(-90,90,5)
+  ) +
+  # scale_y_log10() +
+  theme_common() +
+  theme(
+    panel.grid.major = element_line(color = "darkgrey"),
+    panel.grid.minor = element_line(color = "grey90"),
+  ) +
+  labs(
+    x = "Latitude (degrees)",
+    y = "Crater Density By Biome \n (Craters/KM)"
+  )
+```
+
+
+
+
+```{r}
+df_craters %>%
+  ggplot() +
+  geom_point(
+    aes(x = LON_ELLI_IMG, y = LAT_ELLI_IMG, color = MARIA), 
+    size = 1,
+    alpha = 0.2) +
+  coord_fixed()
+
+
+```
+
+```{r}
+# Showing the original shapefile
+map %>%
+  ggplot() +
+  geom_sf(
+    fill = "blue",
+    color = "blue"
+    )
+```
+
+
+```{r}
+df_craters_hist %>%
+  ggplot(aes(x = LAT_ROUND, y = 1-PORTION_MARIA)) +
   geom_col(
     aes(
       # fill = LAT_ROUND %>% as.character() %>% reorder(LAT_ROUND)
@@ -220,71 +394,10 @@ df_craters_hist %>%
   ) +
   labs(
     x = "Latitude (degrees)",
-    y = "Craters per Latitude Circumference \n (Craters/KM)"
+    y = "Maria Portion per Latitude"
   )
 ```
 
-
-
-```{r}
-df_craters %>%
-  ggplot() +
-  geom_point(
-    aes(x = LON_ELLI_IMG, y = LAT_ELLI_IMG, color = MARIA), 
-    size = 1,
-    alpha = 0.2) +
-  coord_fixed()
-
-
-```
-
-
-
-```{r}
-# Create empty lists of lats and lons
-lats = c()
-lons = c()
-
-# Add every combo of lats and lons, spaced at 2 degrees, to the list
-for (lat in seq(-90,90,2)){
-  for (lon in seq(-180,180,2)){
-    lats = c(lats, lat)
-    lons = c(lons, lon)
-  }
-}
-
-
-pnts <- data.frame(lat = lats, lon = lons) %>% # Make a dataframe of the evenly
-  # spaced points
-  st_as_sf( # Then do the same things as we did with the craters dataset.
-    coords = c("lon", "lat"), 
-    crs = st_crs(map),
-    remove = FALSE
-  ) %>% 
-  mutate(
-    intersection = geometry %>% st_intersects(map) %>% as.integer(),
-    # For some reason, this dataframe works a bit differently. I don't
-    # understand why, and I'm not gonna spend a bunch of time figuring out why
-    maria = !is.na(intersection)
-  )
-
-pnts %>% summary()
-pnts %>%
-  ggplot() +
-  geom_point(aes(x = lon, y = lat, color = maria), size = 1) +
-  coord_fixed()
-```
-
-
-```{r}
-# Showing the original shapefile
-map %>%
-  ggplot() +
-  geom_sf(
-    fill = "blue",
-    color = "blue"
-    )
-```
 
 
 

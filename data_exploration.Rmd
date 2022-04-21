@@ -44,6 +44,17 @@ theme_common <- function() {
   )
 }
 
+## Helper function to compute uncertainty bounds
+# More taking code from ZDR!
+add_uncertainties <- function(data, model, prefix = "pred", ...) {
+  df_fit <-
+    stats::predict(model, data, ...) %>%
+    as_tibble() %>%
+    rename_with(~ str_c(prefix, "_", .))
+
+  bind_cols(data, df_fit)
+}
+
 rad2deg <- function(rad) {(rad * 180) / (pi)}
 deg2rad <- function(deg) {(deg * pi) / (180)}
 # https://stackoverflow.com/questions/32370485/convert-radians-to-degree-degree-to-radians
@@ -372,6 +383,7 @@ map %>%
 
 ```{r}
 df_craters_hist %>%
+  filter(MARIA == FALSE) %>%
   ggplot(aes(x = LAT_ROUND, y = 1-PORTION_MARIA)) +
   geom_col(
     aes(
@@ -396,6 +408,24 @@ df_craters_hist %>%
     x = "Latitude (degrees)",
     y = "Maria Portion per Latitude"
   )
+```
+
+
+```{r}
+df_craters_hist %>%
+  mutate(LAT_ROUND = abs(LAT_ROUND)) %>%
+  group_by(LAT_ROUND) %>%
+  summarize(
+    COUNT_LAT_ROUND = sum(COUNT_LAT_ROUND),
+    CIRCUMFERENCE_LAT = mean(CIRCUMFERENCE_LAT),
+    PORTION_MARIA = mean(PORTION_MARIA)
+  ) %>%
+  mutate(
+    COUNT_LAT_ROUND = ifelse(LAT_ROUND == 0, COUNT_LAT_ROUND * 2, COUNT_LAT_ROUND),
+    NORM_LAT_ROUND = COUNT_LAT_ROUND/CIRCUMFERENCE_LAT
+  ) %>%
+  ggplot(aes(x = LAT_ROUND, y = NORM_LAT_ROUND)) +
+  geom_point()
 ```
 
 

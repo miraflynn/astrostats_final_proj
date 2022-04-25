@@ -1,4 +1,4 @@
-Data Exploration
+AstroStats Final Project
 ================
 Mira Flynn
 4/6/2022
@@ -268,7 +268,7 @@ df_craters %>%
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](data_exploration_files/figure-gfm/angle-variation-1.png)<!-- -->
+![](README_files/figure-gfm/angle-variation-1.png)<!-- -->
 
 This graph explores the angle for the most eccentric craters. Craters
 with low eccentricity are nearly circular, so the direction they point
@@ -289,7 +289,7 @@ df_craters %>%
 
     ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
 
-![](data_exploration_files/figure-gfm/eccentric-craters-angle-variation-1.png)<!-- -->
+![](README_files/figure-gfm/eccentric-craters-angle-variation-1.png)<!-- -->
 
 This graph seems to show some eccentricity variation across different
 latitudes, but there are noticeable lines where the Robbins paper
@@ -305,7 +305,7 @@ df_craters %>%
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](data_exploration_files/figure-gfm/eccentricity-variation-1.png)<!-- -->
+![](README_files/figure-gfm/eccentricity-variation-1.png)<!-- -->
 
 ``` r
 df_craters %>%
@@ -317,7 +317,7 @@ df_craters %>%
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](data_exploration_files/figure-gfm/major-diameter-variation-1.png)<!-- -->
+![](README_files/figure-gfm/major-diameter-variation-1.png)<!-- -->
 
 ``` r
 df_craters %>%
@@ -329,7 +329,7 @@ df_craters %>%
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](data_exploration_files/figure-gfm/minor-diameter-variation-1.png)<!-- -->
+![](README_files/figure-gfm/minor-diameter-variation-1.png)<!-- -->
 
 Plotting craters by latitude and longitude creates essentially a map of
 the moon.
@@ -341,7 +341,7 @@ df_craters %>%
   coord_fixed()
 ```
 
-![](data_exploration_files/figure-gfm/map-1.png)<!-- -->
+![](README_files/figure-gfm/map-1.png)<!-- -->
 
 ``` r
 # WOAH THIS IS SO COOL LOOK AT THIS
@@ -358,7 +358,7 @@ df_craters %>%
   scale_x_continuous(breaks = c(-90,-60,-30,0,30,60,90))
 ```
 
-![](data_exploration_files/figure-gfm/density-histogram-1.png)<!-- -->
+![](README_files/figure-gfm/density-histogram-1.png)<!-- -->
 
 ``` r
 # NOTE: This isn't accounting for diameter changes over latitudes
@@ -429,7 +429,7 @@ pnts %>%
   coord_fixed()
 ```
 
-![](data_exploration_files/figure-gfm/equally-spaced-points-1.png)<!-- -->
+![](README_files/figure-gfm/equally-spaced-points-1.png)<!-- -->
 
 This calculates the portion of the area at each latitude that is in the
 maria.
@@ -576,7 +576,7 @@ df_craters_hist %>%
   )
 ```
 
-![](data_exploration_files/figure-gfm/basic-histogram-1.png)<!-- -->
+![](README_files/figure-gfm/basic-histogram-1.png)<!-- -->
 
 This is the normalized density over the whole lunar surface
 
@@ -613,7 +613,7 @@ df_craters_hist %>%
   )
 ```
 
-![](data_exploration_files/figure-gfm/normalized-density-histogram-1.png)<!-- -->
+![](README_files/figure-gfm/normalized-density-histogram-1.png)<!-- -->
 
 Normalized density for each biome, with bounds of the shapefile
 indicated
@@ -656,7 +656,7 @@ df_craters_hist %>%
   )
 ```
 
-![](data_exploration_files/figure-gfm/biome-normalized-density-histogram-1.png)<!-- -->
+![](README_files/figure-gfm/biome-normalized-density-histogram-1.png)<!-- -->
 
 Mean and SD of the density for each biome
 
@@ -692,7 +692,7 @@ df_craters %>%
   coord_fixed()
 ```
 
-![](data_exploration_files/figure-gfm/categorized-craters-1.png)<!-- -->
+![](README_files/figure-gfm/categorized-craters-1.png)<!-- -->
 
 The original shapefile
 
@@ -706,7 +706,7 @@ map %>%
     )
 ```
 
-![](data_exploration_files/figure-gfm/shapefile-1.png)<!-- -->
+![](README_files/figure-gfm/shapefile-1.png)<!-- -->
 
 Portion of maria across different latitudes
 
@@ -739,7 +739,7 @@ df_craters_hist %>%
   )
 ```
 
-![](data_exploration_files/figure-gfm/maria-portion-1.png)<!-- -->
+![](README_files/figure-gfm/maria-portion-1.png)<!-- -->
 
 The density vs. the portion of maria, with points for each latitude.
 This shows a relatively linear trend with more maria meaning lower
@@ -762,7 +762,7 @@ df_craters_hist %>%
   geom_point()
 ```
 
-![](data_exploration_files/figure-gfm/density-vs-maria-1.png)<!-- -->
+![](README_files/figure-gfm/density-vs-maria-1.png)<!-- -->
 
 oh no there were so many links I used
 

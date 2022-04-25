@@ -1,5 +1,5 @@
 ---
-title: "Data Exploration"
+title: "AstroStats Final Project"
 author: "Mira Flynn"
 date: "4/6/2022"
 output: 

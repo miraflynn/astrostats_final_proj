@@ -7,7 +7,7 @@ output:
     toc: TRUE
 ---
 
-Note: I haven't done cleanup and explanation of the markdown file. Sorry! This will be nicer in the future.
+## Setup and Data Cleaning
 
 ```{r setup}
 # Dependencies
@@ -67,6 +67,7 @@ round_digits = 5
 
 ```
 
+This is all the data cleaning that I did on the Robbins dataset. It is mainly working with the shapefile to categorize each point by biome.
 ```{r data-cleaning}
 map = read_sf("data/LROC_GLOBAL_MARE_180.SHP") %>% # Load the maria shapefile
   st_make_valid() # I don't know what this does exactly but it fixes the shapefile
@@ -99,23 +100,27 @@ df_craters %>% write.csv(
     "data/AstroStats_Robbins_Moon_Maria.csv", 
     row.names = FALSE
   ) # Write modified data to CSV
-
-df_craters %>% head()
 ```
 
 
-```{r}
+```{r data-overview}
+df_craters %>% head()
 df_craters %>% summary()
 ```
-```{r}
+## Initial looks at several variables
+
+Note: These plots were intended for data exploration, and therefore are not presentation quality. 
+
+```{r angle-variation}
 df_craters %>%
   ggplot(aes(x = LAT_ELLI_IMG, y = DIAM_ELLI_ANGLE_IMG)) +
   geom_point(alpha = 0.1) +
   geom_smooth()
 ```
 
+This graph explores the angle for the most eccentric craters. Craters with low eccentricity are nearly circular, so the direction they point may be more random.
 
-```{r}
+```{r eccentric-craters-angle-variation}
 df_craters %>%
   mutate(
     LAT_ELLI_IMG = abs(LAT_ELLI_IMG),
@@ -128,14 +133,16 @@ df_craters %>%
   geom_smooth()
 ```
 
-```{r}
+This graph seems to show some eccentricity variation across different latitudes, but there are noticeable lines where the Robbins paper switched projections. Therefore, I decided not to explore this pattern further.
+
+```{r eccentricity-variation}
 df_craters %>%
   ggplot(aes(x = LAT_ELLI_IMG, y = DIAM_ELLI_ECCEN_IMG)) +
   geom_point(alpha = 0.1) +
   geom_smooth()
 ```
 
-```{r}
+```{r major-diameter-variation}
 df_craters %>%
   ggplot(aes(x = LAT_ELLI_IMG, y = DIAM_ELLI_MAJOR_IMG)) +
   geom_point(alpha = 0.1) +
@@ -144,7 +151,7 @@ df_craters %>%
 ```
 
 
-```{r}
+```{r minor-diameter-variation}
 df_craters %>%
   ggplot(aes(x = LAT_ELLI_IMG, y = DIAM_ELLI_MINOR_IMG)) +
   geom_point(alpha = 0.1) +
@@ -152,8 +159,9 @@ df_craters %>%
   scale_y_log10()
 ```
 
+Plotting craters by latitude and longitude creates essentially a map of the moon.
 
-```{r}
+```{r map}
 df_craters %>%
   ggplot(aes(x = LON_ELLI_IMG, y = LAT_ELLI_IMG)) +
   geom_point(alpha = 0.1) +
@@ -164,9 +172,9 @@ df_craters %>%
 ```
 
 
+This histogram was my first look at density, and is affected by the circumference of the moon being different at each latitude
 
-
-```{r}
+```{r density-histogram}
 df_craters %>%
   ggplot(aes(LAT_ELLI_IMG)) +
   geom_histogram(bins = 36) +
@@ -175,7 +183,11 @@ df_craters %>%
 # NOTE: This isn't accounting for diameter changes over latitudes
 ```
 
-```{r}
+## Shapefile Work
+
+This is the equally spaced points data, which I used to calculate area of each biome at each latitude
+
+```{r equally-spaced-points}
 # Create empty lists of lats and lons
 lats = c()
 lons = c()
@@ -210,7 +222,9 @@ pnts %>%
   coord_fixed()
 ```
 
-```{r}
+This calculates the portion of the area at each latitude that is in the maria.
+
+```{r maria-portions}
 maria_portions <- pnts %>%
   mutate(
     LAT_ROUND = round(lat/round_digits)*round_digits
@@ -227,6 +241,7 @@ maria_portions <- pnts %>%
 maria_portions %>% head()
 ```
 
+THIS IS HOW FAR I GOT INTO CLEANUP
 
 ```{r}
 df_craters_hist <- df_craters %>%
@@ -338,16 +353,19 @@ df_craters_hist %>%
     size = 1,
     show.legend = FALSE
   ) +
+  geom_vline(xintercept = 64.7) +
+  geom_vline(xintercept = -66.5) +
   facet_wrap(vars(BIOME)) +
   scale_x_continuous(
     breaks = seq(-90,90,15),
-    minor_breaks = seq(-90,90,5)
+    minor_breaks = seq(-90,90,15)
   ) +
   # scale_y_log10() +
   theme_common() +
   theme(
-    panel.grid.major = element_line(color = "darkgrey"),
-    panel.grid.minor = element_line(color = "grey90"),
+    # panel.grid.major = element_line(color = "darkgrey"),
+    panel.grid.major = element_line(color = "grey90"),
+    # panel.grid.minor = element_line(color = "grey90"),
   ) +
   labs(
     x = "Latitude (degrees)",
@@ -355,6 +373,17 @@ df_craters_hist %>%
   )
 ```
 
+```{r}
+df_craters_hist %>%
+  mutate(
+    NORM_LAT_ROUND_BIOME = COUNT_LAT_ROUND/CIRCUMFERENCE_BIOME
+  ) %>%
+  group_by(BIOME) %>%
+  summarize(
+    mean = mean(NORM_LAT_ROUND_BIOME),
+    sd = sd(NORM_LAT_ROUND_BIOME)
+  )
+```
 
 
 

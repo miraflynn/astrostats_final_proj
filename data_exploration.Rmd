@@ -227,23 +227,23 @@ This calculates the portion of the area at each latitude that is in the maria.
 ```{r maria-portions}
 maria_portions <- pnts %>%
   mutate(
-    LAT_ROUND = round(lat/round_digits)*round_digits
+    LAT_ROUND = round(lat/round_digits)*round_digits # Round to nearest latitude bin
   ) %>%
   filter(
-    abs(LAT_ROUND) < 90
+    abs(LAT_ROUND) < 90 # 0 circumference at 90 degrees
   ) %>%
   group_by(LAT_ROUND) %>%
   summarize(
-    PORTION_MARIA = mean(maria)
+    PORTION_MARIA = mean(maria) # Get the mean of the true/false maria column
   ) %>%
   as.data.frame() %>%
   select(c(-geometry))
 maria_portions %>% head()
 ```
 
-THIS IS HOW FAR I GOT INTO CLEANUP
 
-```{r}
+
+```{r biome-area}
 df_craters_hist <- df_craters %>%
   mutate(
     LAT_ROUND = round(LAT_ELLI_IMG/round_digits)*round_digits
@@ -253,11 +253,11 @@ df_craters_hist <- df_craters %>%
   ) %>%
   group_by(LAT_ROUND, MARIA) %>%
   summarize(
-    COUNT_LAT_ROUND = n()
+    COUNT_LAT_ROUND = n() # Count number of craters in each biome and latitude
   ) %>%
   mutate(
     CIRCUMFERENCE_LAT = 2*pi*r*cos(deg2rad(LAT_ROUND)),
-    NORM_LAT_ROUND = COUNT_LAT_ROUND/CIRCUMFERENCE_LAT
+    NORM_LAT_ROUND = COUNT_LAT_ROUND/CIRCUMFERENCE_LAT # Normalize by area
   ) %>%
   left_join(maria_portions, by = "LAT_ROUND") %>%
   mutate(
@@ -265,15 +265,18 @@ df_craters_hist <- df_craters %>%
       MARIA, 
       CIRCUMFERENCE_LAT * PORTION_MARIA, 
       CIRCUMFERENCE_LAT * (1-PORTION_MARIA)),
-    BIOME = ifelse(MARIA, "MARIA", "HIGHLANDS")
+    BIOME = ifelse(MARIA, "MARIA", "HIGHLANDS") # Get the final circumference 
+    # for each biome and latitude
   )
 df_craters_hist %>% head()
 ```
 
 
+## Processed Density Graphs
 
+This histogram is recreating the histogram I did way above, to check that my work didn't mess anything up
 
-```{r}
+```{r basic-histogram}
 df_craters_hist %>%
   ggplot(aes(x = LAT_ROUND, y = COUNT_LAT_ROUND)) +
   geom_col(
@@ -302,7 +305,9 @@ df_craters_hist %>%
   
 ```
 
-```{r}
+This is the normalized density over the whole lunar surface
+
+```{r normalized-density-histogram}
 df_craters_hist %>%
   group_by(LAT_ROUND) %>%
   summarize(
@@ -335,8 +340,9 @@ df_craters_hist %>%
   )
 ```
 
+Normalized density for each biome, with bounds of the shapefile indicated
 
-```{r}
+```{r biome-normalized-density-histogram}
 
 df_craters_hist %>%
   mutate(
@@ -353,11 +359,13 @@ df_craters_hist %>%
     size = 1,
     show.legend = FALSE
   ) +
+  # geom_vline(aes(xintercept = 64.7, color = "Bounds of Maria Shapefile")) +
+  # geom_vline(aes(xintercept = -66.5, color = "Bounds of Maria Shapefile")) +
   geom_vline(xintercept = 64.7) +
   geom_vline(xintercept = -66.5) +
   facet_wrap(vars(BIOME)) +
   scale_x_continuous(
-    breaks = seq(-90,90,15),
+    breaks = seq(-90,90,30),
     minor_breaks = seq(-90,90,15)
   ) +
   # scale_y_log10() +
@@ -373,7 +381,10 @@ df_craters_hist %>%
   )
 ```
 
-```{r}
+
+Mean and SD of the density for each biome
+
+```{r mean-sd}
 df_craters_hist %>%
   mutate(
     NORM_LAT_ROUND_BIOME = COUNT_LAT_ROUND/CIRCUMFERENCE_BIOME
@@ -386,8 +397,10 @@ df_craters_hist %>%
 ```
 
 
+## More stuff I'm leaving in
 
-```{r}
+Here is the crater map, but categorized by biome
+```{r categorized-craters}
 df_craters %>%
   ggplot() +
   geom_point(
@@ -399,7 +412,9 @@ df_craters %>%
 
 ```
 
-```{r}
+The original shapefile
+
+```{r shapefile}
 # Showing the original shapefile
 map %>%
   ggplot() +
@@ -410,7 +425,8 @@ map %>%
 ```
 
 
-```{r}
+Portion of maria across different latitudes
+```{r maria-portion}
 df_craters_hist %>%
   filter(MARIA == FALSE) %>%
   ggplot(aes(x = LAT_ROUND, y = 1-PORTION_MARIA)) +
@@ -439,8 +455,9 @@ df_craters_hist %>%
   )
 ```
 
+The density vs. the portion of maria, with points for each latitude. This shows a relatively linear trend with more maria meaning lower density
 
-```{r}
+```{r density-vs-maria}
 df_craters_hist %>%
   mutate(LAT_ROUND = abs(LAT_ROUND)) %>%
   group_by(LAT_ROUND) %>%
@@ -461,10 +478,16 @@ df_craters_hist %>%
 
 
 oh no there were so many links I used
+
 https://wms.lroc.asu.edu/lroc/view_rdr/SHAPEFILE_LROC_GLOBAL_MARE
+
 https://gis.stackexchange.com/questions/133625/checking-if-points-fall-within-polygon-shapefile
+
 https://r-spatial.org/r/2017/03/19/invalid.html
+
 https://gis.stackexchange.com/questions/413584/fix-features-with-invalid-spherical-geometry-polygon-shape-file-for-s2-geometr
+
 https://stackoverflow.com/questions/54734771/sf-write-lat-long-from-geometry-into-separate-column-and-keep-id-column
+
 https://stackoverflow.com/questions/54734771/sf-write-lat-long-from-geometry-into-separate-column-and-keep-id-column
 

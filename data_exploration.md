@@ -3,34 +3,26 @@ Data Exploration
 Mira Flynn
 4/6/2022
 
-Note: I haven’t done cleanup and explanation of the markdown file.
-Sorry! This will be nicer in the future.
+-   [Setup and Data Cleaning](#setup-and-data-cleaning)
+-   [Initial looks at several
+    variables](#initial-looks-at-several-variables)
+-   [Shapefile Work](#shapefile-work)
+-   [Processed Density Graphs](#processed-density-graphs)
+-   [More stuff I’m leaving in](#more-stuff-im-leaving-in)
+
+## Setup and Data Cleaning
 
 ``` r
 # Dependencies
 library(tidyverse)
 ```
 
-    ## Warning: package 'tidyverse' was built under R version 4.0.5
-
     ## -- Attaching packages --------------------------------------- tidyverse 1.3.1 --
 
     ## v ggplot2 3.3.5     v purrr   0.3.4
-    ## v tibble  3.1.6     v dplyr   1.0.8
-    ## v tidyr   1.2.0     v stringr 1.4.0
-    ## v readr   2.1.2     v forcats 0.5.1
-
-    ## Warning: package 'ggplot2' was built under R version 4.0.5
-
-    ## Warning: package 'tibble' was built under R version 4.0.5
-
-    ## Warning: package 'tidyr' was built under R version 4.0.5
-
-    ## Warning: package 'readr' was built under R version 4.0.5
-
-    ## Warning: package 'dplyr' was built under R version 4.0.5
-
-    ## Warning: package 'forcats' was built under R version 4.0.5
+    ## v tibble  3.1.2     v dplyr   1.0.7
+    ## v tidyr   1.1.3     v stringr 1.4.0
+    ## v readr   1.4.0     v forcats 0.5.1
 
     ## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
     ## x dplyr::filter() masks stats::filter()
@@ -39,8 +31,6 @@ library(tidyverse)
 ``` r
 library(magrittr)
 ```
-
-    ## Warning: package 'magrittr' was built under R version 4.0.5
 
     ## 
     ## Attaching package: 'magrittr'
@@ -57,7 +47,7 @@ library(magrittr)
 library(sf)
 ```
 
-    ## Warning: package 'sf' was built under R version 4.0.5
+    ## Warning: package 'sf' was built under R version 4.1.3
 
     ## Linking to GEOS 3.9.1, GDAL 3.2.1, PROJ 7.2.1; sf_use_s2() is TRUE
 
@@ -94,6 +84,17 @@ theme_common <- function() {
   )
 }
 
+## Helper function to compute uncertainty bounds
+# More taking code from ZDR!
+add_uncertainties <- function(data, model, prefix = "pred", ...) {
+  df_fit <-
+    stats::predict(model, data, ...) %>%
+    as_tibble() %>%
+    rename_with(~ str_c(prefix, "_", .))
+
+  bind_cols(data, df_fit)
+}
+
 rad2deg <- function(rad) {(rad * 180) / (pi)}
 deg2rad <- function(deg) {(deg * pi) / (180)}
 # https://stackoverflow.com/questions/32370485/convert-radians-to-degree-degree-to-radians
@@ -104,6 +105,9 @@ r <- 1737.4
 # How much to round the latitudes. Round to spacing of 5
 round_digits = 5
 ```
+
+This is all the data cleaning that I did on the Robbins dataset. It is
+mainly working with the shapefile to categorize each point by biome.
 
 ``` r
 map = read_sf("data/LROC_GLOBAL_MARE_180.SHP") %>% # Load the maria shapefile
@@ -147,7 +151,9 @@ df_craters %>% write.csv(
     "data/AstroStats_Robbins_Moon_Maria.csv", 
     row.names = FALSE
   ) # Write modified data to CSV
+```
 
+``` r
 df_craters %>% head()
 ```
 
@@ -248,6 +254,11 @@ df_craters %>% summary()
     ##  3rd Qu.:0.85342   3rd Qu.:  72.00                  
     ##  Max.   :1.00000   Max.   :8088.00
 
+## Initial looks at several variables
+
+Note: These plots were intended for data exploration, and therefore are
+not presentation quality.
+
 ``` r
 df_craters %>%
   ggplot(aes(x = LAT_ELLI_IMG, y = DIAM_ELLI_ANGLE_IMG)) +
@@ -257,7 +268,11 @@ df_craters %>%
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](data_exploration_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+![](data_exploration_files/figure-gfm/angle-variation-1.png)<!-- -->
+
+This graph explores the angle for the most eccentric craters. Craters
+with low eccentricity are nearly circular, so the direction they point
+may be more random.
 
 ``` r
 df_craters %>%
@@ -274,7 +289,12 @@ df_craters %>%
 
     ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
 
-![](data_exploration_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](data_exploration_files/figure-gfm/eccentric-craters-angle-variation-1.png)<!-- -->
+
+This graph seems to show some eccentricity variation across different
+latitudes, but there are noticeable lines where the Robbins paper
+switched projections. Therefore, I decided not to explore this pattern
+further.
 
 ``` r
 df_craters %>%
@@ -285,7 +305,7 @@ df_craters %>%
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](data_exploration_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](data_exploration_files/figure-gfm/eccentricity-variation-1.png)<!-- -->
 
 ``` r
 df_craters %>%
@@ -297,7 +317,7 @@ df_craters %>%
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](data_exploration_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](data_exploration_files/figure-gfm/major-diameter-variation-1.png)<!-- -->
 
 ``` r
 df_craters %>%
@@ -309,7 +329,10 @@ df_craters %>%
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](data_exploration_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](data_exploration_files/figure-gfm/minor-diameter-variation-1.png)<!-- -->
+
+Plotting craters by latitude and longitude creates essentially a map of
+the moon.
 
 ``` r
 df_craters %>%
@@ -318,12 +341,15 @@ df_craters %>%
   coord_fixed()
 ```
 
-![](data_exploration_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](data_exploration_files/figure-gfm/map-1.png)<!-- -->
 
 ``` r
 # WOAH THIS IS SO COOL LOOK AT THIS
 # https://www.physics.unlv.edu/~jeffery/astro/moon/map/moon_map_mercator.jpg
 ```
+
+This histogram was my first look at density, and is affected by the
+circumference of the moon being different at each latitude
 
 ``` r
 df_craters %>%
@@ -332,11 +358,16 @@ df_craters %>%
   scale_x_continuous(breaks = c(-90,-60,-30,0,30,60,90))
 ```
 
-![](data_exploration_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](data_exploration_files/figure-gfm/density-histogram-1.png)<!-- -->
 
 ``` r
 # NOTE: This isn't accounting for diameter changes over latitudes
 ```
+
+## Shapefile Work
+
+This is the equally spaced points data, which I used to calculate area
+of each biome at each latitude
 
 ``` r
 # Create empty lists of lats and lons
@@ -398,19 +429,22 @@ pnts %>%
   coord_fixed()
 ```
 
-![](data_exploration_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](data_exploration_files/figure-gfm/equally-spaced-points-1.png)<!-- -->
+
+This calculates the portion of the area at each latitude that is in the
+maria.
 
 ``` r
 maria_portions <- pnts %>%
   mutate(
-    LAT_ROUND = round(lat/round_digits)*round_digits
+    LAT_ROUND = round(lat/round_digits)*round_digits # Round to nearest latitude bin
   ) %>%
   filter(
-    abs(LAT_ROUND) < 90
+    abs(LAT_ROUND) < 90 # 0 circumference at 90 degrees
   ) %>%
   group_by(LAT_ROUND) %>%
   summarize(
-    PORTION_MARIA = mean(maria)
+    PORTION_MARIA = mean(maria) # Get the mean of the true/false maria column
   ) %>%
   as.data.frame() %>%
   select(c(-geometry))
@@ -474,11 +508,11 @@ df_craters_hist <- df_craters %>%
   ) %>%
   group_by(LAT_ROUND, MARIA) %>%
   summarize(
-    COUNT_LAT_ROUND = n()
+    COUNT_LAT_ROUND = n() # Count number of craters in each biome and latitude
   ) %>%
   mutate(
     CIRCUMFERENCE_LAT = 2*pi*r*cos(deg2rad(LAT_ROUND)),
-    NORM_LAT_ROUND = COUNT_LAT_ROUND/CIRCUMFERENCE_LAT
+    NORM_LAT_ROUND = COUNT_LAT_ROUND/CIRCUMFERENCE_LAT # Normalize by area
   ) %>%
   left_join(maria_portions, by = "LAT_ROUND") %>%
   mutate(
@@ -486,12 +520,12 @@ df_craters_hist <- df_craters %>%
       MARIA, 
       CIRCUMFERENCE_LAT * PORTION_MARIA, 
       CIRCUMFERENCE_LAT * (1-PORTION_MARIA)),
-    BIOME = ifelse(MARIA, "MARIA", "HIGHLANDS")
+    BIOME = ifelse(MARIA, "MARIA", "HIGHLANDS") # Get the final circumference 
+    # for each biome and latitude
   )
 ```
 
-    ## `summarise()` has grouped output by 'LAT_ROUND'. You can override using the
-    ## `.groups` argument.
+    ## `summarise()` has grouped output by 'LAT_ROUND'. You can override using the `.groups` argument.
 
 ``` r
 df_craters_hist %>% head()
@@ -508,6 +542,11 @@ df_craters_hist %>% head()
     ## 5       -65 FALSE            1859             4613.        0.403         0.00388
     ## 6       -65 TRUE                7             4613.        0.00152       0.00388
     ## # ... with 2 more variables: CIRCUMFERENCE_BIOME <dbl>, BIOME <chr>
+
+## Processed Density Graphs
+
+This histogram is recreating the histogram I did way above, to check
+that my work didn’t mess anything up
 
 ``` r
 df_craters_hist %>%
@@ -537,7 +576,9 @@ df_craters_hist %>%
   )
 ```
 
-![](data_exploration_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](data_exploration_files/figure-gfm/basic-histogram-1.png)<!-- -->
+
+This is the normalized density over the whole lunar surface
 
 ``` r
 df_craters_hist %>%
@@ -572,7 +613,10 @@ df_craters_hist %>%
   )
 ```
 
-![](data_exploration_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](data_exploration_files/figure-gfm/normalized-density-histogram-1.png)<!-- -->
+
+Normalized density for each biome, with bounds of the shapefile
+indicated
 
 ``` r
 df_craters_hist %>%
@@ -590,16 +634,21 @@ df_craters_hist %>%
     size = 1,
     show.legend = FALSE
   ) +
+  # geom_vline(aes(xintercept = 64.7, color = "Bounds of Maria Shapefile")) +
+  # geom_vline(aes(xintercept = -66.5, color = "Bounds of Maria Shapefile")) +
+  geom_vline(xintercept = 64.7) +
+  geom_vline(xintercept = -66.5) +
   facet_wrap(vars(BIOME)) +
   scale_x_continuous(
-    breaks = seq(-90,90,15),
-    minor_breaks = seq(-90,90,5)
+    breaks = seq(-90,90,30),
+    minor_breaks = seq(-90,90,15)
   ) +
   # scale_y_log10() +
   theme_common() +
   theme(
-    panel.grid.major = element_line(color = "darkgrey"),
-    panel.grid.minor = element_line(color = "grey90"),
+    # panel.grid.major = element_line(color = "darkgrey"),
+    panel.grid.major = element_line(color = "grey90"),
+    # panel.grid.minor = element_line(color = "grey90"),
   ) +
   labs(
     x = "Latitude (degrees)",
@@ -607,7 +656,31 @@ df_craters_hist %>%
   )
 ```
 
-![](data_exploration_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](data_exploration_files/figure-gfm/biome-normalized-density-histogram-1.png)<!-- -->
+
+Mean and SD of the density for each biome
+
+``` r
+df_craters_hist %>%
+  mutate(
+    NORM_LAT_ROUND_BIOME = COUNT_LAT_ROUND/CIRCUMFERENCE_BIOME
+  ) %>%
+  group_by(BIOME) %>%
+  summarize(
+    mean = mean(NORM_LAT_ROUND_BIOME),
+    sd = sd(NORM_LAT_ROUND_BIOME)
+  )
+```
+
+    ## # A tibble: 2 x 3
+    ##   BIOME       mean     sd
+    ##   <chr>      <dbl>  <dbl>
+    ## 1 HIGHLANDS 0.392  0.0455
+    ## 2 MARIA     0.0925 0.0870
+
+## More stuff I’m leaving in
+
+Here is the crater map, but categorized by biome
 
 ``` r
 df_craters %>%
@@ -619,7 +692,9 @@ df_craters %>%
   coord_fixed()
 ```
 
-![](data_exploration_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](data_exploration_files/figure-gfm/categorized-craters-1.png)<!-- -->
+
+The original shapefile
 
 ``` r
 # Showing the original shapefile
@@ -631,10 +706,13 @@ map %>%
     )
 ```
 
-![](data_exploration_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](data_exploration_files/figure-gfm/shapefile-1.png)<!-- -->
+
+Portion of maria across different latitudes
 
 ``` r
 df_craters_hist %>%
+  filter(MARIA == FALSE) %>%
   ggplot(aes(x = LAT_ROUND, y = 1-PORTION_MARIA)) +
   geom_col(
     aes(
@@ -661,12 +739,41 @@ df_craters_hist %>%
   )
 ```
 
-![](data_exploration_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](data_exploration_files/figure-gfm/maria-portion-1.png)<!-- -->
+
+The density vs. the portion of maria, with points for each latitude.
+This shows a relatively linear trend with more maria meaning lower
+density
+
+``` r
+df_craters_hist %>%
+  mutate(LAT_ROUND = abs(LAT_ROUND)) %>%
+  group_by(LAT_ROUND) %>%
+  summarize(
+    COUNT_LAT_ROUND = sum(COUNT_LAT_ROUND),
+    CIRCUMFERENCE_LAT = mean(CIRCUMFERENCE_LAT),
+    PORTION_MARIA = mean(PORTION_MARIA)
+  ) %>%
+  mutate(
+    COUNT_LAT_ROUND = ifelse(LAT_ROUND == 0, COUNT_LAT_ROUND * 2, COUNT_LAT_ROUND),
+    NORM_LAT_ROUND = COUNT_LAT_ROUND/CIRCUMFERENCE_LAT
+  ) %>%
+  ggplot(aes(x = LAT_ROUND, y = NORM_LAT_ROUND)) +
+  geom_point()
+```
+
+![](data_exploration_files/figure-gfm/density-vs-maria-1.png)<!-- -->
 
 oh no there were so many links I used
+
 <https://wms.lroc.asu.edu/lroc/view_rdr/SHAPEFILE_LROC_GLOBAL_MARE>
+
 <https://gis.stackexchange.com/questions/133625/checking-if-points-fall-within-polygon-shapefile>
+
 <https://r-spatial.org/r/2017/03/19/invalid.html>
+
 <https://gis.stackexchange.com/questions/413584/fix-features-with-invalid-spherical-geometry-polygon-shape-file-for-s2-geometr>
+
 <https://stackoverflow.com/questions/54734771/sf-write-lat-long-from-geometry-into-separate-column-and-keep-id-column>
+
 <https://stackoverflow.com/questions/54734771/sf-write-lat-long-from-geometry-into-separate-column-and-keep-id-column>

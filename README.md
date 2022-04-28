@@ -131,7 +131,7 @@ df_craters <- read.csv("data/AstroStats_Robbins_Moon.csv") %>% # Load the datase
   ) %>% 
   mutate(
     intersection = geometry %>% st_intersects(map, sparse = TRUE),
-    # Interesection column is where each point intersects the map, if any
+    # Intersection column is where each point intersects the map, if any
     MARIA = (intersection %>% as.character()) != "integer(0)"
     # This is a bit chaotic. The intersection column is a funky object type, so
     # to compare it, I cast it to a character type. If the intersection is 0,
@@ -609,7 +609,7 @@ df_craters_hist %>%
   labs(
     x = "Latitude (degrees)",
     y = "Crater Density \n (craters/km)",
-    caption = "\n Lunar crater density distribution at different latitudes \n"
+    # caption = "\n Lunar crater density distribution at different latitudes \n"
   )
 ```
 

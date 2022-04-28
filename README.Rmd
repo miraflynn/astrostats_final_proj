@@ -380,11 +380,25 @@ df_craters_hist %>%
     y = "Crater Density By Biome \n (Craters/KM)"
   )
 ```
+Mean and SD of the density over the whole lunar surface.
+```{r mean-sd}
+df_craters_hist %>%
+  group_by(LAT_ROUND) %>%
+  summarize(
+    COUNT_LAT_ROUND = sum(COUNT_LAT_ROUND),
+    CIRCUMFERENCE_LAT = mean(CIRCUMFERENCE_LAT),
+    NORM_LAT_ROUND = COUNT_LAT_ROUND/CIRCUMFERENCE_LAT
+  ) %>%
+  summarize(
+    mean = mean(NORM_LAT_ROUND),
+    sd = sd(NORM_LAT_ROUND)
+  )
+```
 
 
 Mean and SD of the density for each biome
 
-```{r mean-sd}
+```{r mean-sd-biomes}
 df_craters_hist %>%
   mutate(
     NORM_LAT_ROUND_BIOME = COUNT_LAT_ROUND/CIRCUMFERENCE_BIOME

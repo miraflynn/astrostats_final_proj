@@ -657,6 +657,26 @@ df_craters_hist %>%
 ```
 
 ![](README_files/figure-gfm/biome-normalized-density-histogram-1.png)<!-- -->
+Mean and SD of the density over the whole lunar surface.
+
+``` r
+df_craters_hist %>%
+  group_by(LAT_ROUND) %>%
+  summarize(
+    COUNT_LAT_ROUND = sum(COUNT_LAT_ROUND),
+    CIRCUMFERENCE_LAT = mean(CIRCUMFERENCE_LAT),
+    NORM_LAT_ROUND = COUNT_LAT_ROUND/CIRCUMFERENCE_LAT
+  ) %>%
+  summarize(
+    mean = mean(NORM_LAT_ROUND),
+    sd = sd(NORM_LAT_ROUND)
+  )
+```
+
+    ## # A tibble: 1 x 2
+    ##    mean     sd
+    ##   <dbl>  <dbl>
+    ## 1 0.350 0.0545
 
 Mean and SD of the density for each biome
 

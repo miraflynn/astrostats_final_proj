@@ -3,12 +3,16 @@ AstroStats Final Project
 Mira Flynn
 4/6/2022
 
--   [Setup and Data Cleaning](#setup-and-data-cleaning)
--   [Initial looks at several
-    variables](#initial-looks-at-several-variables)
--   [Shapefile Work](#shapefile-work)
--   [Processed Density Graphs](#processed-density-graphs)
--   [More stuff I’m leaving in](#more-stuff-im-leaving-in)
+- <a href="#setup-and-data-cleaning"
+  id="toc-setup-and-data-cleaning">Setup and Data Cleaning</a>
+- <a href="#initial-looks-at-several-variables"
+  id="toc-initial-looks-at-several-variables">Initial looks at several
+  variables</a>
+- <a href="#shapefile-work" id="toc-shapefile-work">Shapefile Work</a>
+- <a href="#processed-density-graphs"
+  id="toc-processed-density-graphs">Processed Density Graphs</a>
+- <a href="#more-stuff-im-leaving-in"
+  id="toc-more-stuff-im-leaving-in">More stuff I’m leaving in</a>
 
 ## Setup and Data Cleaning
 
@@ -17,16 +21,14 @@ Mira Flynn
 library(tidyverse)
 ```
 
-    ## -- Attaching packages --------------------------------------- tidyverse 1.3.1 --
-
-    ## v ggplot2 3.3.5     v purrr   0.3.4
-    ## v tibble  3.1.2     v dplyr   1.0.7
-    ## v tidyr   1.1.3     v stringr 1.4.0
-    ## v readr   1.4.0     v forcats 0.5.1
-
-    ## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
-    ## x dplyr::filter() masks stats::filter()
-    ## x dplyr::lag()    masks stats::lag()
+    ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+    ## ✔ ggplot2 3.4.0      ✔ purrr   0.3.5 
+    ## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
+    ## ✔ tidyr   1.2.1      ✔ stringr 1.4.1 
+    ## ✔ readr   2.1.3      ✔ forcats 0.5.2 
+    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ✖ dplyr::filter() masks stats::filter()
+    ## ✖ dplyr::lag()    masks stats::lag()
 
 ``` r
 library(magrittr)
@@ -34,11 +36,11 @@ library(magrittr)
 
     ## 
     ## Attaching package: 'magrittr'
-
+    ## 
     ## The following object is masked from 'package:purrr':
     ## 
     ##     set_names
-
+    ## 
     ## The following object is masked from 'package:tidyr':
     ## 
     ##     extract
@@ -47,9 +49,7 @@ library(magrittr)
 library(sf)
 ```
 
-    ## Warning: package 'sf' was built under R version 4.1.3
-
-    ## Linking to GEOS 3.9.1, GDAL 3.2.1, PROJ 7.2.1; sf_use_s2() is TRUE
+    ## Linking to GEOS 3.11.0, GDAL 3.5.3, PROJ 9.1.0; sf_use_s2() is TRUE
 
 ``` r
 # Create the final PDF with code snippets shown
@@ -143,8 +143,10 @@ df_craters <- read.csv("data/AstroStats_Robbins_Moon.csv") %>% # Load the datase
   )
 ```
 
-    ## although coordinates are longitude/latitude, st_intersects assumes that they are planar
-    ## although coordinates are longitude/latitude, st_intersects assumes that they are planar
+    ## although coordinates are longitude/latitude, st_intersects assumes that they
+    ## are planar
+    ## although coordinates are longitude/latitude, st_intersects assumes that they
+    ## are planar
 
 ``` r
 df_craters %>% write.csv(
@@ -266,7 +268,7 @@ df_craters %>%
   geom_smooth()
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
 
 ![](README_files/figure-gfm/angle-variation-1.png)<!-- -->
 
@@ -287,7 +289,7 @@ df_craters %>%
   geom_smooth()
 ```
 
-    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
 ![](README_files/figure-gfm/eccentric-craters-angle-variation-1.png)<!-- -->
 
@@ -303,7 +305,7 @@ df_craters %>%
   geom_smooth()
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
 
 ![](README_files/figure-gfm/eccentricity-variation-1.png)<!-- -->
 
@@ -315,7 +317,7 @@ df_craters %>%
   scale_y_log10()
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
 
 ![](README_files/figure-gfm/major-diameter-variation-1.png)<!-- -->
 
@@ -327,7 +329,7 @@ df_craters %>%
   scale_y_log10()
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
 
 ![](README_files/figure-gfm/minor-diameter-variation-1.png)<!-- -->
 
@@ -398,8 +400,10 @@ pnts <- data.frame(lat = lats, lon = lons) %>% # Make a dataframe of the evenly
   )
 ```
 
-    ## although coordinates are longitude/latitude, st_intersects assumes that they are planar
-    ## although coordinates are longitude/latitude, st_intersects assumes that they are planar
+    ## although coordinates are longitude/latitude, st_intersects assumes that they
+    ## are planar
+    ## although coordinates are longitude/latitude, st_intersects assumes that they
+    ## are planar
 
 ``` r
 pnts %>% summary()
@@ -431,6 +435,13 @@ pnts %>%
 
 ![](README_files/figure-gfm/equally-spaced-points-1.png)<!-- -->
 
+``` r
+pnts %>% write.csv(
+    "data/AstroStats_Degree_Spaced_Maria_Or_Highlands.csv", 
+    row.names = FALSE
+  ) # Write modified data to CSV
+```
+
 This calculates the portion of the area at each latitude that is in the
 maria.
 
@@ -450,41 +461,8 @@ maria_portions <- pnts %>%
   select(c(-geometry))
 ```
 
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
-    ## although coordinates are longitude/latitude, st_union assumes that they are planar
+    ## although coordinates are longitude/latitude, st_union assumes that they are
+    ## planar
 
 ``` r
 maria_portions %>% head()
@@ -525,23 +503,25 @@ df_craters_hist <- df_craters %>%
   )
 ```
 
-    ## `summarise()` has grouped output by 'LAT_ROUND'. You can override using the `.groups` argument.
+    ## `summarise()` has grouped output by 'LAT_ROUND'. You can override using the
+    ## `.groups` argument.
 
 ``` r
 df_craters_hist %>% head()
 ```
 
-    ## # A tibble: 6 x 8
+    ## # A tibble: 6 × 8
     ## # Groups:   LAT_ROUND [5]
-    ##   LAT_ROUND MARIA COUNT_LAT_ROUND CIRCUMFERENCE_LAT NORM_LAT_ROUND PORTION_MARIA
-    ##       <dbl> <lgl>           <int>             <dbl>          <dbl>         <dbl>
-    ## 1       -85 FALSE             424              951.        0.446         0      
-    ## 2       -80 FALSE             704             1896.        0.371         0      
-    ## 3       -75 FALSE            1110             2825.        0.393         0      
-    ## 4       -70 FALSE            1367             3734.        0.366         0      
-    ## 5       -65 FALSE            1859             4613.        0.403         0.00388
-    ## 6       -65 TRUE                7             4613.        0.00152       0.00388
-    ## # ... with 2 more variables: CIRCUMFERENCE_BIOME <dbl>, BIOME <chr>
+    ##   LAT_ROUND MARIA COUNT_LAT_ROUND CIRCUMFERENCE_…¹ NORM_…² PORTI…³ CIRCU…⁴ BIOME
+    ##       <dbl> <lgl>           <int>            <dbl>   <dbl>   <dbl>   <dbl> <chr>
+    ## 1       -85 FALSE             424             951. 0.446   0         951.  HIGH…
+    ## 2       -80 FALSE             704            1896. 0.371   0        1896.  HIGH…
+    ## 3       -75 FALSE            1110            2825. 0.393   0        2825.  HIGH…
+    ## 4       -70 FALSE            1367            3734. 0.366   0        3734.  HIGH…
+    ## 5       -65 FALSE            1859            4613. 0.403   0.00388  4596.  HIGH…
+    ## 6       -65 TRUE                7            4613. 0.00152 0.00388    17.9 MARIA
+    ## # … with abbreviated variable names ¹​CIRCUMFERENCE_LAT, ²​NORM_LAT_ROUND,
+    ## #   ³​PORTION_MARIA, ⁴​CIRCUMFERENCE_BIOME
 
 ## Processed Density Graphs
 
@@ -575,6 +555,9 @@ df_craters_hist %>%
     y = "Craters"
   )
 ```
+
+    ## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+    ## ℹ Please use `linewidth` instead.
 
 ![](README_files/figure-gfm/basic-histogram-1.png)<!-- -->
 
@@ -673,7 +656,7 @@ df_craters_hist %>%
   )
 ```
 
-    ## # A tibble: 1 x 2
+    ## # A tibble: 1 × 2
     ##    mean     sd
     ##   <dbl>  <dbl>
     ## 1 0.350 0.0545
@@ -692,7 +675,7 @@ df_craters_hist %>%
   )
 ```
 
-    ## # A tibble: 2 x 3
+    ## # A tibble: 2 × 3
     ##   BIOME       mean     sd
     ##   <chr>      <dbl>  <dbl>
     ## 1 HIGHLANDS 0.392  0.0455

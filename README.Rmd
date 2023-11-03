@@ -220,6 +220,11 @@ pnts %>%
   ggplot() +
   geom_point(aes(x = lon, y = lat, color = maria), size = 0.2) +
   coord_fixed()
+
+pnts %>% write.csv(
+    "data/AstroStats_Degree_Spaced_Maria_Or_Highlands.csv", 
+    row.names = FALSE
+  ) # Write modified data to CSV
 ```
 
 This calculates the portion of the area at each latitude that is in the maria.
